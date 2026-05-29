@@ -3,6 +3,7 @@ use crate::build_info::BuildInfo;
 use crate::doc::Doc;
 use crate::format::Format;
 use crate::git::Git;
+use crate::ipxact::Ipxact;
 use crate::lint::Lint;
 use crate::lockfile::Lockfile;
 use crate::project::Project;
@@ -48,6 +49,8 @@ pub struct Metadata {
     pub publish: Publish,
     #[serde(default)]
     pub doc: Doc,
+    #[serde(default)]
+    pub ipxact: Ipxact,
     #[serde(default)]
     pub test: Test,
     #[serde(default)]

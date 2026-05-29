@@ -8,6 +8,7 @@ pub mod cmd_doc;
 pub mod cmd_dump;
 pub mod cmd_fmt;
 pub mod cmd_init;
+pub mod cmd_ipxact;
 pub mod cmd_metadata;
 pub mod cmd_migrate;
 pub mod cmd_new;
@@ -19,6 +20,7 @@ pub mod cmd_update;
 pub mod context;
 pub mod diff;
 pub mod doc;
+pub mod ipxact;
 pub mod runner;
 pub mod stopwatch;
 pub mod utils;
@@ -76,6 +78,7 @@ pub enum Commands {
     Publish(OptPublish),
     Migrate(OptMigrate),
     Doc(OptDoc),
+    Ipxact(OptIpxact),
     Metadata(OptMetadata),
     Dump(OptDump),
     Test(OptTest),
@@ -175,6 +178,13 @@ pub struct OptMigrate {
 /// Build the document corresponding to the current project
 #[derive(Args)]
 pub struct OptDoc {
+    /// Target files
+    pub files: Vec<PathBuf>,
+}
+
+/// Generate IP-XACT (IEEE 1685) component descriptions for the current project
+#[derive(Args)]
+pub struct OptIpxact {
     /// Target files
     pub files: Vec<PathBuf>,
 }
