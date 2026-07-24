@@ -1,0 +1,9 @@
+# Veryl build / test artifacts
+/dependencies/
+/target/
+*.f
+# Generated waveforms (regenerate with `veryl test --wave`)
+/wave/
+# Transpiled SystemVerilog output
+*.sv
+*.sv.map

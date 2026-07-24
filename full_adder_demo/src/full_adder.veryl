@@ -1,0 +1,49 @@
+/// 1 ビット全加算器 (combinational)
+///   sum  = a ^ b ^ cin
+///   cout = 多数決 (a,b,cin のうち 2 個以上が 1 なら 1)
+module FullAdder (
+    a   : input  logic,
+    b   : input  logic,
+    cin : input  logic,
+    sum : output logic,
+    cout: output logic,
+) {
+    assign sum  = a ^ b ^ cin;
+    assign cout = a & b | b & cin | a & cin;
+}
+
+/// 全加算器のテストベンチ
+/// 組み合わせ回路だが、波形は clock エッジごとにダンプされるため
+/// clock_gen を使って 1 サイクルずつ入力を印加していく。
+#[test(test_full_adder)]
+module test_full_adder {
+    inst clk: $tb::clock_gen;
+
+    var a   : logic;
+    var b   : logic;
+    var cin : logic;
+    var sum : logic;
+    var cout: logic;
+
+    inst dut: FullAdder (
+        a   : a   ,
+        b   : b   ,
+        cin : cin ,
+        sum : sum ,
+        cout: cout,
+    );
+
+    initial {
+        // 入力の全 8 パターン (000 .. 111) を順に印加
+        for i in 0..8 {
+            a   = i[0];
+            b   = i[1];
+            cin = i[2];
+            clk.next();
+            // 期待値と比較
+            $assert(sum  == (a ^ b ^ cin));
+            $assert(cout == (a & b | b & cin | a & cin));
+        }
+        $finish();
+    }
+}

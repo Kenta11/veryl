@@ -1,0 +1,17 @@
+[project]
+name    = "full_adder_demo"
+version = "0.1.0"
+
+[build]
+clock_type = "posedge"
+reset_type = "async_low"
+sources    = ["src"]
+
+[test]
+# Veryl 純正シミュレータの波形フォーマット: "vcd" または "fst"
+waveform_format = "fst"
+
+# 波形の出力先ディレクトリ
+[test.waveform_target]
+type = "directory"
+path = "wave"
