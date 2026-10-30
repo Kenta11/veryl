@@ -162,6 +162,19 @@ impl PartSelectPath {
 
         for (i, x) in part_select.enumerate() {
             let has_sub_part = i != (len - 1);
+            let flat;
+            let x = if !has_sub_part
+                && x.r#type.width.dims() == 0
+                && (!select.is_empty() || range_select.is_some())
+                && (x.r#type.is_struct_union() || x.r#type.is_enum())
+            {
+                let mut r#type = x.r#type.clone();
+                r#type.flatten_struct_union_enum();
+                flat = PartSelect { pos: x.pos, r#type };
+                &flat
+            } else {
+                x
+            };
             let dims = x.r#type.width.dims();
             let select_dims = select.len().min(dims);
             let remaining_dims = dims - select_dims;

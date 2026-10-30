@@ -1394,3 +1394,64 @@ fn packed_range_temporary_storage_does_not_scale_with_row_width() {
         );
     }
 }
+
+#[test]
+fn select_on_struct_typed_member() {
+    let code = r#"
+    module Top (
+        i      : input  logic<10>,
+        k      : input  logic<4>,
+        range  : output logic<4>,
+        single : output logic,
+        dynamic: output logic,
+        written: output logic<10>,
+    ) {
+        struct f_t {
+            hdr : logic   ,
+            data: logic<8>,
+        }
+        struct c_t {
+            wr  : logic,
+            flit: f_t  ,
+        }
+        var b: c_t;
+        var w: c_t;
+        assign b = i;
+        always_comb {
+            w           = i;
+            w.flit[3:0] = 4'ha;
+            w.flit[8]   = 0;
+        }
+        assign range   = b.flit[3:0];
+        assign single  = b.flit[3];
+        assign dynamic = b.flit[k];
+        assign written = w;
+    }
+    "#;
+    for config in Config::all() {
+        let mut sim = Simulator::new(analyze(code, &config), None);
+        sim.set("i", Value::new(0x3ab, 10, false));
+        sim.set("k", Value::new(4, 4, false));
+        sim.step(&Event::clock(VarId::SYNTHETIC));
+        assert_eq!(
+            sim.get("range").unwrap(),
+            Value::new(0xb, 4, false),
+            "{config:?}"
+        );
+        assert_eq!(
+            sim.get("single").unwrap(),
+            Value::new(1, 1, false),
+            "{config:?}"
+        );
+        assert_eq!(
+            sim.get("dynamic").unwrap(),
+            Value::new(0, 1, false),
+            "{config:?}"
+        );
+        assert_eq!(
+            sim.get("written").unwrap(),
+            Value::new(0x2aa, 10, false),
+            "{config:?}"
+        );
+    }
+}
