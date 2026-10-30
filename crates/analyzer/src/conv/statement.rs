@@ -40,6 +40,15 @@ impl Conv<&StatementBlock> for ir::StatementBlock {
     }
 }
 
+fn bare_arm(context: &mut Context, value: &Statement) -> IrResult<ir::StatementBlock> {
+    match with_tb_hoist_sink(context, |c| Conv::conv(c, value)) {
+        Err(e) if !context.in_generic => Ok(ir::StatementBlock(vec![ir::Statement::Unsupported(
+            e.token,
+        )])),
+        x => x,
+    }
+}
+
 /// Runs `f` with a fresh testbench hoist sink and splices the component
 /// method calls hoisted out of the converted construct in front of its
 /// statements. Giving each statement-level construct its own sink keeps
@@ -931,9 +940,7 @@ impl Conv<&CaseStatement> for ir::StatementBlock {
                     match item.case_item.case_item_group0.as_ref() {
                         // A bare statement arm has no StatementBlockItem wrapper, so
                         // it needs its own hoist sink here.
-                        CaseItemGroup0::Statement(x) => {
-                            with_tb_hoist_sink(c, |c| Conv::conv(c, x.statement.as_ref()))
-                        }
+                        CaseItemGroup0::Statement(x) => bare_arm(c, x.statement.as_ref()),
                         CaseItemGroup0::StatementBlock(x) => {
                             Conv::conv(c, x.statement_block.as_ref())
                         }
@@ -1021,9 +1028,7 @@ impl Conv<&SwitchStatement> for ir::StatementBlock {
                 match item.switch_item.switch_item_group0.as_ref() {
                     // A bare statement arm has no StatementBlockItem wrapper, so
                     // it needs its own hoist sink here.
-                    SwitchItemGroup0::Statement(x) => {
-                        with_tb_hoist_sink(c, |c| Conv::conv(c, x.statement.as_ref()))
-                    }
+                    SwitchItemGroup0::Statement(x) => bare_arm(c, x.statement.as_ref()),
                     SwitchItemGroup0::StatementBlock(x) => {
                         Conv::conv(c, x.statement_block.as_ref())
                     }

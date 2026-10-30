@@ -37975,3 +37975,67 @@ fn a_field_write_after_a_runtime_index_write_to_its_element_merges_with_it() {
         );
     }
 }
+
+#[test]
+fn constant_function_with_unsupported_bare_arm() {
+    let code = r#"
+    package pkg {
+        enum ch_e: logic<2> {
+            A = 2'd0,
+            B = 2'd1,
+        }
+        function width_case (ch: input ch_e) -> u32 {
+            case ch {
+                ch_e::A: return 10;
+                ch_e::B: return 20;
+                default: $error("bad");
+            }
+        }
+        function width_switch (ch: input ch_e) -> u32 {
+            switch {
+                ch == ch_e::A: return 10;
+                ch == ch_e::B: return 20;
+                default      : $error("bad");
+            }
+        }
+        function max_width () -> u32 {
+            var m: u32;
+            m = 0;
+            for i in 0..2 {
+                if width_case(i as ch_e) >: m {
+                    m = width_case(i as ch_e);
+                }
+            }
+            return m + 1;
+        }
+    }
+    module Top (
+        a: output logic<pkg::max_width()>,
+        b: output logic<pkg::width_case(pkg::ch_e::B)>,
+        c: output logic<pkg::width_switch(pkg::ch_e::B)>,
+    ) {
+        assign a = '1;
+        assign b = '1;
+        assign c = '1;
+    }
+    "#;
+    for config in Config::all() {
+        let mut sim = Simulator::new(analyze(code, &config), None);
+        sim.step(&Event::clock(VarId::SYNTHETIC));
+        assert_eq!(
+            sim.get("a").unwrap(),
+            Value::new(0x1f_ffff, 21, false),
+            "{config:?}"
+        );
+        assert_eq!(
+            sim.get("b").unwrap(),
+            Value::new(0xf_ffff, 20, false),
+            "{config:?}"
+        );
+        assert_eq!(
+            sim.get("c").unwrap(),
+            Value::new(0xf_ffff, 20, false),
+            "{config:?}"
+        );
+    }
+}
